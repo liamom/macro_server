@@ -1,0 +1,11 @@
+[package]
+name = "macro_server"
+version = "0.1.0"
+authors = ["Liam Oliver-Mallory <liam.olivermallory@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+winapi = {version = "0.3.6", features = ["winuser"]}
+num = "0.2.0"
+hyper = "0.12.25"
+futures = "0.1.17"

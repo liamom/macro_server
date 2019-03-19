@@ -1,0 +1,28 @@
+.tile {
+    width: 10em;
+    height: 10em;
+    outline: 1px black solid;
+
+    display: inline-flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+
+}
+
+.tile .tile-internal {
+    display: flex;
+}
+
+.tile .tile-table {
+    height: 90%;
+    width: 100%;;
+    overflow-y: scroll;
+    display: block;
+}
+
+.tile h3 {
+    height: 10%;
+    /* align-self: flex-end; */
+    /* display: block; */
+}
