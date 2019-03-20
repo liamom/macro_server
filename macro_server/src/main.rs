@@ -1,41 +1,38 @@
-#![deny(warnings)]
+#![allow(dead_code)]
+#![allow(unused_imports)]
 
 use hyper::{Client, Server};
 use hyper::service::service_fn;
-use hyper::rt::{self, Future};
-use std::net::SocketAddr;
+use futures::{future, Future};
+use crate::macro_server::Api;
+use std::rc::Rc;
+use std::sync::Arc;
+use inputbot::KeySequence;
+
+mod macro_server;
+mod macro_data;
 
 fn main() {
+    let addr = "127.0.0.1:5000".parse().unwrap();
 
-    let in_addr = ([127, 0, 0, 1], 3001).into();
-    let out_addr: SocketAddr = ([127, 0, 0, 1], 3002).into();
+    hyper::rt::run(future::lazy(move || {
+        // Share a `Client` with all `Service`s
+        let _client = Client::new();
+        let api = Arc::new(Api::new());
 
-    let client_main = Client::new();
+        let service = move || {
+            let api_rc = api.clone();
+            service_fn(move |req| {
+                api_rc.service(req)
+            })
+        };
 
-    let out_addr_clone = out_addr.clone();
-    // new_service is run for each connection, creating a 'service'
-    // to handle requests for that specific connection.
-    let new_service = move || {
-        let client = client_main.clone();
-        // This is the `Service` that will handle the connection.
-        // `service_fn_ok` is a helper to convert a function that
-        // returns a Response into a `Service`.
-        service_fn(move |mut req| {
-            let uri_string = format!("http://{}/{}",
-                                     out_addr_clone,
-                                     req.uri().path_and_query().map(|x| x.as_str()).unwrap_or(""));
-            let uri = uri_string.parse().unwrap();
-            *req.uri_mut() = uri;
-            client.request(req)
-        })
-    };
+        let server = Server::bind(&addr)
+//            .serve(new_service)
+            .serve(service)
+            .map_err(|e| eprintln!("server error: {}", e));
 
-    let server = Server::bind(&in_addr)
-        .serve(new_service)
-        .map_err(|e| eprintln!("server error: {}", e));
+        println!("Listening on http://{}", addr);
 
-    println!("Listening on http://{}", in_addr);
-    println!("Proxying on http://{}", out_addr);
-
-    rt::run(server);
-}
+        server
+    }));}

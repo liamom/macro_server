@@ -1,5 +1,5 @@
 import React, { Component, PureComponent } from 'react';
-import TileData from './TileData'
+import {GridItem, Button, Grid} from './GridItem'
 import { string } from 'prop-types';
 import ModalPopup from './modal_popup'
 import KBListner from './keyboard_listener'
@@ -122,7 +122,7 @@ class TileEdit extends Component<TileEditProps, TileEditState> {
 }
 
 interface TileProps {
-    data: TileData
+    data: GridItem
 }
 
 interface TileState {
@@ -197,7 +197,7 @@ class Tile extends Component<TileProps, TileState> {
     }
 
     render() {
-        let data: TileData = this.props.data;
+        let data: Button = this.props.data as Button;
         return (
             <div className="tile" >
                 <div  className="tile tile-internal"
@@ -212,7 +212,7 @@ class Tile extends Component<TileProps, TileState> {
                     <h3>{data.name}</h3>
                 </div>
                 <ModalPopup visible={this.state.showPopup}>
-                    <h1>{this.props.data.name}</h1>
+                    <h1>{data.name}</h1>
                     <TileEdit lastMacro={this.state.macro} onSave={this.save_tile} />
                 </ModalPopup>
             </div>
@@ -221,13 +221,37 @@ class Tile extends Component<TileProps, TileState> {
 }
 
 
-export class TilesView extends Component<{}, {}> {
-    public readonly data: TileData[] = [
-        new TileData("name 1", "action 1"),
-        new TileData("name 2", "action 2")
-    ];
+export class TilesView extends Component<{}, Grid> {
+    public readonly default_data: Grid = new Grid([
+        new Button("name 1", "action 1"),
+        new Button("name 2", "action 2")
+    ]);
 
-    renderTiles(tile_list: TileData[]) {
+    constructor(props: any) {
+        super(props);
+        this.state = new Grid(null);
+        this.load_grid();
+    }
+    
+    load_grid() {
+        axios.get('/api/grid')
+            .then( r => {
+                let jsonObj = r.data;
+                let gridData: Grid = jsonObj;
+                console.log(gridData);
+                this.setState(gridData)                
+            })
+            .catch(e => {
+                this.setState(this.default_data);
+                console.log(e);
+            })
+    }
+
+    renderTiles(tile_list: GridItem[] | null) {
+        if (tile_list === null) {
+            return;
+        }
+
         let elms: JSX.Element[] = []
         for (let tile of tile_list) {
             elms.push(<Tile data={tile} />)
@@ -239,12 +263,13 @@ export class TilesView extends Component<{}, {}> {
     }
 
     render() {
+        let data: Grid = this.state;
         return (  
             <div>
                 {/* <ModalPopup visible={true}>
                     <h2>hello</h2>
                 </ModalPopup> */}
-                {this.renderTiles(this.data)}
+                {this.renderTiles(data.items)}
             </div>
         )
     }
