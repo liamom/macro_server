@@ -100,11 +100,14 @@ class TileEdit extends Component<TileEditProps, TileEditState> {
                     {this.state.isRecording ? "Stop recording" : "Record Macro"}
                 </button>
                 <table>
+                <thead>
                     <tr>
                         <th>Key</th>
                         <th>type</th>
                         <th>-</th>
                     </tr>
+                </thead>
+                <tbody>
                     {this.state.macro.map((item: MacroItem) => {
                         return (
                             <tr>
@@ -113,6 +116,7 @@ class TileEdit extends Component<TileEditProps, TileEditState> {
                                 <td><button onClick={() => this.deleteRow(item)}>-</button></td>
                             </tr>)
                     })}
+                </tbody>
                 </table>
 
                 <button onClick={() => this.props.onSave(this.state.macro)}>save</button>
@@ -123,6 +127,7 @@ class TileEdit extends Component<TileEditProps, TileEditState> {
 
 interface TileProps {
     data: GridItem
+    key: number
 }
 
 interface TileState {
@@ -181,10 +186,13 @@ class Tile extends Component<TileProps, TileState> {
     renderMacroTable() {
         return(
             <table className="tile-table">
+            <thead>
             <tr>
                 <th>Key</th>
                 <th>type</th>
             </tr>
+            </thead>
+            <tbody>
             {this.state.macro.map((item: MacroItem) => {
                 return (
                     <tr>
@@ -192,6 +200,7 @@ class Tile extends Component<TileProps, TileState> {
                         <td>{toString(item.type)}</td>
                     </tr>)
             })}
+            </tbody>
             </table>
         )
     }
@@ -220,8 +229,11 @@ class Tile extends Component<TileProps, TileState> {
     }
 }
 
+interface TilesViewState {
+    grid: Grid | null;
+}
 
-export class TilesView extends Component<{}, Grid> {
+export class TilesView extends Component<{}, TilesViewState> {
     public readonly default_data: Grid = new Grid([
         new Button("name 1", "action 1"),
         new Button("name 2", "action 2")
@@ -229,7 +241,7 @@ export class TilesView extends Component<{}, Grid> {
 
     constructor(props: any) {
         super(props);
-        this.state = new Grid(null);
+        this.state = {grid: null};
         this.load_grid();
     }
     
@@ -239,22 +251,19 @@ export class TilesView extends Component<{}, Grid> {
                 let jsonObj = r.data;
                 let gridData: Grid = jsonObj;
                 console.log(gridData);
-                this.setState(gridData)                
+                this.setState({grid: gridData})
             })
             .catch(e => {
-                this.setState(this.default_data);
+                this.setState({grid: this.default_data});
                 console.log(e);
             })
     }
 
-    renderTiles(tile_list: GridItem[] | null) {
-        if (tile_list === null) {
-            return;
-        }
-
+    renderTiles(tile_list: GridItem[]) {
         let elms: JSX.Element[] = []
+        let i = 0;
         for (let tile of tile_list) {
-            elms.push(<Tile data={tile} />)
+            elms.push(<Tile key={++i} data={tile} />)
         }
 
         return (
@@ -263,7 +272,9 @@ export class TilesView extends Component<{}, Grid> {
     }
 
     render() {
-        let data: Grid = this.state;
+        let data: Grid = this.state.grid != null 
+                                         ? this.state.grid 
+                                         : this.default_data;
         return (  
             <div>
                 {/* <ModalPopup visible={true}>

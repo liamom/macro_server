@@ -20,9 +20,9 @@ export class Empty {}
 export type GridItem = Button | Grid | Empty;
 
 export class Grid {
-    items: GridItem[] | null;
+    items: GridItem[];
 
-    constructor(items: GridItem[] | null) {
+    constructor(items: GridItem[]) {
         this.items = items;
     }
 }
